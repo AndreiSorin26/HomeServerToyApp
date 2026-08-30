@@ -21,6 +21,14 @@ docker run --rm -p 18081:8080 \
 
 Open `http://127.0.0.1:18081`.
 
+## Unit tests
+
+```sh
+npm test
+```
+
+The tests cover username normalization/limits and upload filename sanitization.
+
 ## Deploy through HomeServer
 
 1. Push this repository's `main` branch to an HTTPS or SSH Git URL.

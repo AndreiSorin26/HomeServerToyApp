@@ -1,10 +1,11 @@
 import { createServer } from 'node:http';
 import { createWriteStream } from 'node:fs';
 import { mkdir, readFile, readdir, stat } from 'node:fs/promises';
-import { basename, join } from 'node:path';
+import { join } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
+import { isValidUsername, normalizeUsername, safeUploadName } from './validation.mjs';
 
 const { Pool } = pg;
 const port = Number.parseInt(process.env.PORT ?? '8080', 10);
@@ -41,12 +42,6 @@ const readJson = async (request) => {
   return JSON.parse(Buffer.concat(chunks).toString('utf8'));
 };
 
-const safeUploadName = (value) => {
-  const name = basename(value ?? '').replace(/[^A-Za-z0-9._-]/g, '_');
-  if (!name || name === '.' || name === '..') throw new Error('A valid filename is required');
-  return name;
-};
-
 const handleRequest = async (request, response) => {
   const url = new URL(request.url ?? '/', 'http://localhost');
 
@@ -70,8 +65,8 @@ const handleRequest = async (request, response) => {
 
   if (request.method === 'POST' && url.pathname === '/api/users') {
     const { username } = await readJson(request);
-    const normalized = typeof username === 'string' ? username.trim() : '';
-    if (normalized.length < 1 || normalized.length > 100) {
+    const normalized = normalizeUsername(username);
+    if (!isValidUsername(normalized)) {
       sendJson(response, 400, { error: 'Username must contain 1-100 characters' });
       return;
     }
