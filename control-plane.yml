@@ -1,0 +1,24 @@
+version: "1"
+build:
+  context: .
+  dockerfile: Dockerfile
+runtime:
+  port: 8080
+  user: "10001:10001"
+  readOnlyRootFilesystem: true
+  pathRoutingCompatible: true
+  environmentRequired: []
+healthCheck:
+  path: /health
+  intervalSeconds: 5
+  timeoutSeconds: 2
+  retries: 10
+  startPeriodSeconds: 2
+resources:
+  memoryMb: 128
+  cpus: 0.5
+  pids: 64
+dependencies:
+  databases: []
+  storage: []
+

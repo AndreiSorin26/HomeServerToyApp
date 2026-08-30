@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>HomeServer Toy App</title>
+  </head>
+  <body>
+    <main id="message"></main>
+    <script>
+      fetch('api/message')
+        .then((response) => {
+          if (!response.ok) throw new Error(`API returned ${response.status}`);
+          return response.json();
+        })
+        .then(({ message }) => {
+          document.querySelector('#message').textContent = message;
+        })
+        .catch((error) => {
+          document.querySelector('#message').textContent = error.message;
+        });
+    </script>
+  </body>
+</html>
+
