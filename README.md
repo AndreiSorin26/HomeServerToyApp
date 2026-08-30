@@ -4,6 +4,8 @@ A deliberately tiny frontend/backend repository for testing the HomeServer contr
 
 - The frontend is a blank HTML page that calls the relative `api/message` URL.
 - The backend exposes `GET /api/message` and returns the text displayed by the page.
+- A username form writes to an attached PostgreSQL database.
+- A raw file upload writes to an attached read/write storage sandbox.
 - `GET /health` is reserved for the container health check.
 - The relative browser URL makes the app compatible with HomeServer's `/apps/{slug}/` prefix routing.
 
@@ -11,7 +13,10 @@ A deliberately tiny frontend/backend repository for testing the HomeServer contr
 
 ```sh
 docker build -t home-server-toy-app .
-docker run --rm -p 18081:8080 home-server-toy-app
+docker run --rm -p 18081:8080 \
+  -e DATABASE_URL='postgresql://...' \
+  -v toy-uploads:/data/uploads \
+  home-server-toy-app
 ```
 
 Open `http://127.0.0.1:18081`.

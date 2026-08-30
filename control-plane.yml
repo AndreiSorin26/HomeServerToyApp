@@ -7,7 +7,8 @@ runtime:
   user: "10001:10001"
   readOnlyRootFilesystem: true
   pathRoutingCompatible: true
-  environmentRequired: []
+  environmentRequired:
+    - DATABASE_URL
 healthCheck:
   path: /health
   intervalSeconds: 5
@@ -19,6 +20,11 @@ resources:
   cpus: 0.5
   pids: 64
 dependencies:
-  databases: []
-  storage: []
-
+  databases:
+    - name: toy-users
+      engine: Postgres
+      connectionEnvironmentVariable: DATABASE_URL
+  storage:
+    - name: toy-uploads
+      containerPath: /data/uploads
+      access: ReadWrite

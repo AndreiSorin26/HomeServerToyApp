@@ -6,20 +6,96 @@
     <title>HomeServer Toy App</title>
   </head>
   <body>
-    <main id="message"></main>
+    <main>
+      <p id="message"></p>
+
+      <section>
+        <h1>Database test</h1>
+        <form id="user-form">
+          <input id="username" aria-label="Username" maxlength="100" required>
+          <button>Save username</button>
+        </form>
+        <ul id="users"></ul>
+      </section>
+
+      <section>
+        <h1>Storage test</h1>
+        <form id="upload-form">
+          <input id="file" aria-label="File" type="file" required>
+          <button>Upload file</button>
+        </form>
+        <ul id="files"></ul>
+      </section>
+
+      <p id="status" role="status"></p>
+    </main>
     <script>
-      fetch('api/message')
-        .then((response) => {
-          if (!response.ok) throw new Error(`API returned ${response.status}`);
-          return response.json();
-        })
-        .then(({ message }) => {
+      const request = async (url, options) => {
+        const response = await fetch(url, options);
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || `Request returned ${response.status}`);
+        return result;
+      };
+
+      const showStatus = (message) => document.querySelector('#status').textContent = message;
+
+      const loadUsers = async () => {
+        const { users } = await request('api/users');
+        document.querySelector('#users').replaceChildren(...users.map(({ username }) => {
+          const item = document.createElement('li');
+          item.textContent = username;
+          return item;
+        }));
+      };
+
+      const loadFiles = async () => {
+        const { files } = await request('api/files');
+        document.querySelector('#files').replaceChildren(...files.map(({ name, size }) => {
+          const item = document.createElement('li');
+          const link = document.createElement('a');
+          link.href = `uploads/${encodeURIComponent(name)}`;
+          link.textContent = `${name} (${size} bytes)`;
+          item.append(link);
+          return item;
+        }));
+      };
+
+      document.querySelector('#user-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        try {
+          await request('api/users', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ username: document.querySelector('#username').value }),
+          });
+          event.target.reset();
+          await loadUsers();
+          showStatus('Username saved.');
+        } catch (error) { showStatus(error.message); }
+      });
+
+      document.querySelector('#upload-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const file = document.querySelector('#file').files[0];
+        try {
+          await request(`api/uploads?name=${encodeURIComponent(file.name)}`, {
+            method: 'POST',
+            headers: { 'content-type': file.type || 'application/octet-stream' },
+            body: file,
+          });
+          event.target.reset();
+          await loadFiles();
+          showStatus('File uploaded.');
+        } catch (error) { showStatus(error.message); }
+      });
+
+      Promise.all([
+        request('api/message').then(({ message }) => {
           document.querySelector('#message').textContent = message;
-        })
-        .catch((error) => {
-          document.querySelector('#message').textContent = error.message;
-        });
+        }),
+        loadUsers(),
+        loadFiles(),
+      ]).catch((error) => showStatus(error.message));
     </script>
   </body>
 </html>
-
