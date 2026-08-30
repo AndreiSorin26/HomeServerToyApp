@@ -13,13 +13,17 @@ const frontendPath = fileURLToPath(new URL('../frontend/index.html', import.meta
 const maximumUploadBytes = 1024 * 1024;
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-const databaseReady = pool.query(`
-  CREATE TABLE IF NOT EXISTS toy_users (
-    id BIGSERIAL PRIMARY KEY,
-    username TEXT NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-  )
-`);
+let databaseReady;
+const ensureDatabase = () => databaseReady ??= pool.query(`
+    CREATE TABLE IF NOT EXISTS toy_users (
+      id BIGSERIAL PRIMARY KEY,
+      username TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `).catch((error) => {
+    databaseReady = undefined;
+    throw error;
+  });
 
 const sendJson = (response, status, value) => {
   response.writeHead(status, { 'content-type': 'application/json; charset=utf-8' });
@@ -57,7 +61,7 @@ const handleRequest = async (request, response) => {
   }
 
   if (request.method === 'GET' && url.pathname === '/api/users') {
-    await databaseReady;
+    await ensureDatabase();
     const result = await pool.query(
       'SELECT id, username, created_at FROM toy_users ORDER BY id DESC LIMIT 50');
     sendJson(response, 200, { users: result.rows });
@@ -71,7 +75,7 @@ const handleRequest = async (request, response) => {
       sendJson(response, 400, { error: 'Username must contain 1-100 characters' });
       return;
     }
-    await databaseReady;
+    await ensureDatabase();
     const result = await pool.query(
       'INSERT INTO toy_users (username) VALUES ($1) RETURNING id, username, created_at',
       [normalized]);
