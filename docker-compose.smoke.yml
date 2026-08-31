@@ -1,0 +1,97 @@
+services:
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:18081:8080"
+    environment:
+      DATABASE_URL: postgresql://app:smoke-password@postgres:5432/app
+      MONGO_URL: mongodb://app:smoke-password@mongo:27017/app?authSource=admin
+      REDIS_URL: redis://:smoke-password@redis:6379/0
+      PGVECTOR_URL: postgresql://app:smoke-password@pgvector:5432/app
+      NEO4J_URL: bolt://neo4j:smoke-password@neo4j:7687
+    volumes:
+      - toy-uploads:/data/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      pgvector:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: smoke-password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d app"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  mongo:
+    image: mongo:8.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: app
+      MONGO_INITDB_ROOT_PASSWORD: smoke-password
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--username", "app", "--password", "smoke-password", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - mongo-data:/data/db
+
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "smoke-password"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "smoke-password", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - redis-data:/data
+
+  pgvector:
+    image: pgvector/pgvector:0.8.6-pg17
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: smoke-password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d app"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - pgvector-data:/var/lib/postgresql/data
+
+  neo4j:
+    image: neo4j:2026.07.1-community
+    environment:
+      NEO4J_AUTH: neo4j/smoke-password
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:7474 >/dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 10s
+    volumes:
+      - neo4j-data:/data
+
+volumes:
+  toy-uploads:
+  postgres-data:
+  mongo-data:
+  redis-data:
+  pgvector-data:
+  neo4j-data:

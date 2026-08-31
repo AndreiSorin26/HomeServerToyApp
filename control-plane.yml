@@ -9,6 +9,10 @@ runtime:
   pathRoutingCompatible: true
   environmentRequired:
     - DATABASE_URL
+    - MONGO_URL
+    - REDIS_URL
+    - PGVECTOR_URL
+    - NEO4J_URL
 healthCheck:
   path: /health
   intervalSeconds: 5
@@ -24,6 +28,18 @@ dependencies:
     - name: toy-users
       engine: Postgres
       connectionEnvironmentVariable: DATABASE_URL
+    - name: toy-mongo
+      engine: Mongo
+      connectionEnvironmentVariable: MONGO_URL
+    - name: toy-cache
+      engine: Redis
+      connectionEnvironmentVariable: REDIS_URL
+    - name: toy-vectors
+      engine: PgVector
+      connectionEnvironmentVariable: PGVECTOR_URL
+    - name: toy-graph
+      engine: Neo4j
+      connectionEnvironmentVariable: NEO4J_URL
   storage:
     - name: toy-uploads
       containerPath: /data/uploads

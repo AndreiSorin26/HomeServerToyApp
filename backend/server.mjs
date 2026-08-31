@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
+import { runDatabaseTests } from './database-tests.mjs';
 import { isValidUsername, normalizeUsername, safeUploadName } from './validation.mjs';
 
 const { Pool } = pg;
@@ -52,6 +53,12 @@ const handleRequest = async (request, response) => {
 
   if (request.method === 'GET' && url.pathname === '/api/message') {
     sendJson(response, 200, { message: 'Hello from the toy backend.' });
+    return;
+  }
+
+  if (request.method === 'POST' && url.pathname === '/api/database-tests') {
+    const result = await runDatabaseTests();
+    sendJson(response, result.allPassed ? 200 : 503, result);
     return;
   }
 

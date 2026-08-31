@@ -2,24 +2,23 @@
 
 A deliberately tiny frontend/backend repository for testing the HomeServer control plane.
 
-- The frontend is a blank HTML page that calls the relative `api/message` URL.
+- The responsive frontend calls the backend through relative URLs so it also works behind a route prefix.
 - The backend exposes `GET /api/message` and returns the text displayed by the page.
 - A username form writes to an attached PostgreSQL database.
 - A raw file upload writes to an attached read/write storage sandbox.
+- A single smoke-test action performs real write/read checks against PostgreSQL, MongoDB, Redis, pgvector, and Neo4j.
 - `GET /health` is reserved for the container health check.
 - The relative browser URL makes the app compatible with HomeServer's `/apps/{slug}/` prefix routing.
 
 ## Local container check
 
 ```sh
-docker build -t home-server-toy-app .
-docker run --rm -p 18081:8080 \
-  -e DATABASE_URL='postgresql://...' \
-  -v toy-uploads:/data/uploads \
-  home-server-toy-app
+docker compose -f docker-compose.smoke.yml up -d --build
 ```
 
 Open `http://127.0.0.1:18081`.
+
+The compose stack uses the same default database images as HomeServer and persists each engine in a named volume. Use the page's **Run all database tests** button to exercise relational queries, document storage, key/value storage, vector similarity, and graph traversal.
 
 ## Unit tests
 
@@ -27,7 +26,7 @@ Open `http://127.0.0.1:18081`.
 npm test
 ```
 
-The tests cover username normalization/limits and upload filename sanitization.
+The unit tests cover username normalization/limits, upload filename sanitization, and the five integration declarations. The Compose smoke test covers the actual database drivers and queries.
 
 ## Deploy through HomeServer
 

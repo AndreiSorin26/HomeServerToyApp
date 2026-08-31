@@ -8,7 +8,8 @@ COPY frontend ./frontend
 
 RUN addgroup -g 10001 app \
     && adduser -D -H -u 10001 -G app app \
-    && chown -R 10001:10001 /app
+    && mkdir -p /data/uploads \
+    && chown -R 10001:10001 /app /data
 
 USER 10001:10001
 ENV NODE_ENV=production \
