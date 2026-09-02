@@ -52,7 +52,7 @@ const handleRequest = async (request, response) => {
   }
 
   if (request.method === 'GET' && url.pathname === '/api/message') {
-    sendJson(response, 200, { message: 'Hello from the toy backend.' });
+    sendJson(response, 200, { message: 'Hello from toy release B.' });
     return;
   }
 
