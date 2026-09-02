@@ -1,28 +1,51 @@
-version: "1"
-build:
-  context: .
-  dockerfile: Dockerfile
-runtime:
-  port: 8080
-  user: "10001:10001"
-  readOnlyRootFilesystem: true
-  pathRoutingCompatible: true
-  environmentRequired:
-    - DATABASE_URL
-    - MONGO_URL
-    - REDIS_URL
-    - PGVECTOR_URL
-    - NEO4J_URL
-healthCheck:
-  path: /health
-  intervalSeconds: 5
-  timeoutSeconds: 2
-  retries: 10
-  startPeriodSeconds: 2
-resources:
-  memoryMb: 128
-  cpus: 0.5
-  pids: 64
+version: "2"
+services:
+  api:
+    public: true
+    build:
+      context: .
+      dockerfile: Dockerfile
+    runtime:
+      port: 8080
+      user: "10001:10001"
+      readOnlyRootFilesystem: true
+      pathRoutingCompatible: true
+      environmentRequired:
+        - DATABASE_URL
+        - MONGO_URL
+        - REDIS_URL
+        - PGVECTOR_URL
+        - NEO4J_URL
+    healthCheck:
+      path: /health
+      intervalSeconds: 5
+      timeoutSeconds: 2
+      retries: 10
+      startPeriodSeconds: 2
+    resources:
+      memoryMb: 128
+      cpus: 0.5
+      pids: 64
+    dependsOn:
+      - worker
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    runtime:
+      port: 8081
+      user: "10001:10001"
+      readOnlyRootFilesystem: true
+    healthCheck:
+      path: /health
+      intervalSeconds: 5
+      timeoutSeconds: 2
+      retries: 10
+      startPeriodSeconds: 2
+    resources:
+      memoryMb: 64
+      cpus: 0.25
+      pids: 32
 dependencies:
   databases:
     - name: toy-users
