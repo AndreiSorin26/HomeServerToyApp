@@ -1,0 +1,7 @@
+services:
+  api:
+    resources:
+      memoryMb: 192
+  worker:
+    resources:
+      cpus: 0.30

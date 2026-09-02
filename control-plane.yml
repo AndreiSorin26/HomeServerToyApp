@@ -1,3 +1,5 @@
+overlays:
+  - control-plane.smoke-overlay.yml
 version: "2"
 services:
   api:
