@@ -17,7 +17,7 @@ services:
         - PGVECTOR_URL
         - NEO4J_URL
     healthCheck:
-      path: /intentionally-unhealthy
+      path: /health
       intervalSeconds: 5
       timeoutSeconds: 2
       retries: 10
